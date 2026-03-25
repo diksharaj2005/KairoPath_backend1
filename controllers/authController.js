@@ -69,11 +69,27 @@ export const register = async (req, res) => {
       refreshToken,
     });
   } catch (error) {
-    console.error("REGISTER ERROR:", error);
-    res.status(500).json({
-      message: "Server error",
+    console.error("🚨 REGISTER ERROR:", error);
+    
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(err => err.message).join(', ');
+      return res.status(400).json({ message: `Validation Error: ${messages}` });
+    }
+    
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'Email already exists' });
+    }
+    
+    if (error.name === 'MongoServerError') {
+      console.error("Mongo Error details:", error);
+      return res.status(500).json({ message: 'Database connection failed' });
+    }
+    
+    res.status(500).json({ 
+      message: process.env.NODE_ENV === 'production' ? 'Server error' : error.message 
     });
   }
+
 };
 
 /* ================= LOGIN ================= */

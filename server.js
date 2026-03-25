@@ -39,9 +39,10 @@ const app = express();
 /* ===== MIDDLEWARE ===== */
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL,
+  origin: process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : ['http://localhost:5173', 'https://kairopath.vercel.app'],
   credentials: true
 }));
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -71,12 +72,8 @@ app.use("/api", mockInterviewRoutes);
 
 export default app;
 
-/* ===== LOCAL DEV ONLY ===== */
+/* ===== PRODUCTION/SERVERLESS READY ===== */
+console.log("🚀 KairoPath API Serverless Ready");
+console.log("DB URL:", process.env.MONGODB_URL ? "✅ Loaded" : "❌ Missing");
+console.log("FRONTEND_URL:", process.env.FRONTEND_URL || "localhost:5173");
 
-if (process.env.NODE_ENV !== "production") {
-  const PORT = process.env.PORT || 5000;
-
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-}
