@@ -329,7 +329,7 @@ export const updateProfile = async (req, res) => {
 
 /* ================= CHANGE PASSWORD ================= */
 
-export const changePassword = async (req, res) => {
+eexport const changePassword = async (req, res) => {
   try {
     const userId = req.user?.id;
     const { currentPassword, newPassword } = req.body;
@@ -369,12 +369,14 @@ export const changePassword = async (req, res) => {
     user.password = hashedPassword;
     await user.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Password changed successfully",
     });
+
   } catch (error) {
-    console.error("CHANGE PASSWORD ERROR:", error);
-    res.status(500).json({
+    console.error("CHANGE PASSWORD ERROR:", error?.message || error);
+
+    return res.status(500).json({
       message: "Server error",
     });
   }
@@ -384,8 +386,15 @@ export const changePassword = async (req, res) => {
 
 export const requestPasswordReset = async (req, res) => {
   const { email } = req.body;
+
   try {
     console.log("RESET REQUEST:", email);
+
+    if (!email) {
+      return res.status(400).json({
+        message: "Email required",
+      });
+    }
 
     const user = await User.findOne({ email });
 
@@ -422,68 +431,34 @@ export const requestPasswordReset = async (req, res) => {
       },
     });
 
-    const resetURL = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password/${resetToken}`;
+    const resetURL =
+      `${process.env.FRONTEND_URL || "http://localhost:5173"}/reset-password/${resetToken}`;
 
-const mailOptions = {
-  from: `"KairoPath" <${process.env.EMAIL_USER}>`,
-  to: email,
-  subject: 'Password Reset - KairoPath',
-  html: `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background: #f8fafc; }
-        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); overflow: hidden; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 30px; text-align: center; }
-        .header h1 { margin: 0; font-size: 28px; font-weight: 700; }
-        .content { padding: 40px 30px; }
-        .button { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 16px 32px; text-decoration: none; border-radius: 12px; font-weight: 600; font-size: 16px; display: inline-block; box-shadow: 0 4px 14px 0 rgba(16,185,129,0.4); transition: all 0.3s ease; }
-        .button:hover { transform: translateY(-2px); box-shadow: 0 8px 25px 0 rgba(16,185,129,0.3); }
-        .validity { background: linear-gradient(90deg, #dbeafe 0%, #bfdbfe 100%); border-left: 4px solid #3b82f6; padding: 20px; border-radius: 8px; margin: 24px 0; }
-        .footer { background: #f8fafc; padding: 24px 30px; text-align: center; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px; }
-        .message { color: #374151; line-height: 1.7; margin-bottom: 24px; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h1>🔐 Password Reset</h1>
-        </div>
-        <div class="content">
-          <p class="message">Hi,</p>
-          <p class="message">You requested a password reset for your <strong>KairoPath</strong> account. No worries, it happens!</p>
-          
-          <div class="validity">
-            <strong>⏰ This link expires in 1 hour</strong>
-          </div>
-          
-          <div style="text-align: center; margin: 32px 0;">
-            <a href="${resetURL}" class="button">Reset My Password</a>
-          </div>
-          
-          <p class="message" style="font-size: 14px; color: #6b7280;">
-            If you didn't request a password reset, please ignore this email. Your account is safe.
-          </p>
-        </div>
-        <div class="footer">
-          <p>© 2025 KairoPath. Built for career success.</p>
-        </div>
-      </div>
-    </body>
-    </html>
-  `,
-};
+    const mailOptions = {
+      from: `"KairoPath" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Password Reset - KairoPath",
+      html: `
+        <h2>Password Reset</h2>
+        <p>You requested password reset.</p>
+        <a href="${resetURL}" 
+           style="padding:12px 20px;background:#10b981;color:white;text-decoration:none;border-radius:8px;">
+           Reset Password
+        </a>
+        <p>This link valid for 1 hour.</p>
+      `,
+    };
 
     await transporter.sendMail(mailOptions);
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Reset link sent to your email!",
     });
+
   } catch (error) {
-    console.error("RESET ERROR:", error);
-    res.status(500).json({
+    console.error("RESET ERROR:", error?.message || error);
+
+    return res.status(500).json({
       message: "Failed to send reset email. Check logs.",
     });
   }
@@ -495,6 +470,12 @@ export const resetPassword = async (req, res) => {
   const { token, newPassword } = req.body;
 
   try {
+    if (!token || !newPassword) {
+      return res.status(400).json({
+        message: "Token and password required",
+      });
+    }
+
     const user = await User.findOne({
       resetToken: token,
       resetTokenExpiry: { $gt: Date.now() },
@@ -514,12 +495,14 @@ export const resetPassword = async (req, res) => {
 
     await user.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Password reset successful",
     });
+
   } catch (error) {
-    console.error("RESET PASSWORD ERROR:", error);
-    res.status(500).json({
+    console.error("RESET PASSWORD ERROR:", error?.message || error);
+
+    return res.status(500).json({
       message: "Error resetting password",
     });
   }
