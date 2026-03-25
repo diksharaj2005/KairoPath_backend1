@@ -58,7 +58,7 @@ export const register = async (req, res) => {
 
     console.log("User created successfully:", user);
 
-    res.status(201).json({
+    return res.status(201).json({
       message: "User registered successfully",
       user: {
         id: user._id,
@@ -68,28 +68,39 @@ export const register = async (req, res) => {
       accessToken,
       refreshToken,
     });
+
   } catch (error) {
-    console.error("🚨 REGISTER ERROR:", error);
-    
-    if (error.name === 'ValidationError') {
-      const messages = Object.values(error.errors).map(err => err.message).join(', ');
-      return res.status(400).json({ message: `Validation Error: ${messages}` });
+
+    console.error("🚨 REGISTER ERROR:", error?.message || error);
+
+    if (error?.name === "ValidationError") {
+      const messages = Object.values(error.errors)
+        .map((err) => err.message)
+        .join(", ");
+      return res.status(400).json({
+        message: `Validation Error: ${messages}`,
+      });
     }
-    
-    if (error.code === 11000) {
-      return res.status(400).json({ message: 'Email already exists' });
+
+    if (error?.code === 11000) {
+      return res.status(400).json({
+        message: "Email already exists",
+      });
     }
-    
-    if (error.name === 'MongoServerError') {
-      console.error("Mongo Error details:", error);
-      return res.status(500).json({ message: 'Database connection failed' });
+
+    if (error?.name === "MongoServerError") {
+      return res.status(500).json({
+        message: "Database connection failed",
+      });
     }
-    
-    res.status(500).json({ 
-      message: process.env.NODE_ENV === 'production' ? 'Server error' : error.message 
+
+    return res.status(500).json({
+      message:
+        process.env.NODE_ENV === "production"
+          ? "Server error"
+          : error.message,
     });
   }
-
 };
 
 /* ================= LOGIN ================= */
@@ -126,7 +137,7 @@ export const login = async (req, res) => {
     user.refreshToken = refreshToken;
     await user.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Login successful",
       user: {
         id: user._id,
@@ -136,11 +147,12 @@ export const login = async (req, res) => {
       accessToken,
       refreshToken,
     });
+
   } catch (error) {
-    console.error("LOGIN ERROR:", error);
-    res.status(500).json({
+    console.error("LOGIN ERROR:", error?.message || error);
+
+    return res.status(500).json({
       message: "Server error",
-      error: error.message,
     });
   }
 };
@@ -174,13 +186,15 @@ export const refreshToken = async (req, res) => {
 
       const newAccessToken = generateAccessToken(decoded.userId);
 
-      res.status(200).json({
+      return res.status(200).json({
         accessToken: newAccessToken,
       });
     });
+
   } catch (error) {
-    console.error("REFRESH ERROR:", error);
-    res.status(500).json({
+    console.error("REFRESH ERROR:", error?.message || error);
+
+    return res.status(500).json({
       message: "Server error",
     });
   }
@@ -205,17 +219,18 @@ export const logout = async (req, res) => {
       await user.save();
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Logged out successfully",
     });
+
   } catch (error) {
-    console.error("LOGOUT ERROR:", error);
-    res.status(500).json({
+    console.error("LOGOUT ERROR:", error?.message || error);
+
+    return res.status(500).json({
       message: "Server error",
     });
   }
 };
-
 /* ================= GET CURRENT USER ================= */
 
 export const getCurrentUser = async (req, res) => {
