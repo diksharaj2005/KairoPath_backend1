@@ -329,7 +329,7 @@ export const updateProfile = async (req, res) => {
 
 /* ================= CHANGE PASSWORD ================= */
 
-eexport const changePassword = async (req, res) => {
+export const changePassword = async (req, res) => {
   try {
     const userId = req.user?.id;
     const { currentPassword, newPassword } = req.body;
