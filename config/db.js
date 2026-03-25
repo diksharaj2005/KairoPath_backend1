@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
 
+const MONGO_URI = process.env.MONGO_URI;
+
 let cached = global.mongoose;
 
 if (!cached) {
@@ -12,35 +14,14 @@ const connectDB = async () => {
   }
 
   if (!cached.promise) {
-    const opts = {
+    cached.promise = mongoose.connect(MONGO_URI, {
       bufferCommands: false,
-      serverSelectionTimeoutMS: 10000,
-      socketTimeoutMS: 45000,
-    };
-
-    if (!process.env.MONGODB_URL) {
-      console.error("❌ MONGODB_URL missing");
-      throw new Error("MONGODB_URL env var required");
-    }
-
-    cached.promise = mongoose.connect(process.env.MONGODB_URL, opts).then((mongooseInstance) => {
-      console.log("✅ MongoDB connected");
-      return mongooseInstance.connection;
-    }).catch((err) => {
-      console.error("❌ MongoDB connection error:", err.message);
-      throw err;
-    });
+    }).then((mongoose) => mongoose);
   }
 
-  try {
-    cached.conn = await cached.promise;
-  } catch (e) {
-    cached.promise = null;
-    throw e;
-  }
-
+  cached.conn = await cached.promise;
+  console.log("MongoDB Connected");
   return cached.conn;
 };
 
 export default connectDB;
-
