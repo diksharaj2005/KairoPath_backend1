@@ -38,11 +38,14 @@ const app = express();
 
 /* ===== MIDDLEWARE ===== */
 
-app.use(cors({
-  origin: process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : ['http://localhost:5173', 'https://kairopath.vercel.app'],
-  credentials: true
-}));
-
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL
+      ? [process.env.FRONTEND_URL]
+      : ["http://localhost:5173", "https://kairopath.vercel.app"],
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -51,9 +54,9 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-/* ===== DB ===== */
+/* ===== DB (SERVERLESS SAFE CALL) ===== */
 
-connectDB();
+await connectDB();
 
 /* ===== HEALTH ===== */
 
@@ -72,8 +75,8 @@ app.use("/api", mockInterviewRoutes);
 
 export default app;
 
-/* ===== PRODUCTION/SERVERLESS READY ===== */
+/* ===== PRODUCTION LOGS ===== */
+
 console.log("🚀 KairoPath API Serverless Ready");
 console.log("DB URL:", process.env.MONGODB_URL ? "✅ Loaded" : "❌ Missing");
 console.log("FRONTEND_URL:", process.env.FRONTEND_URL || "localhost:5173");
-
